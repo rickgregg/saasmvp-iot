@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+  <h1>IoT Device</h1>
+  <button type="button" id="fw">GET Firmware Update</button>
+  <button type="button" id="cf">GET Configuration File</button>
+  <button type="button" id="sd">POST Data to Endpoint</button>
+  <button type="button" id="rt">WebSocket - Send Real-Time Data to Endpoint</button>
+  <div id="msg" class="mt"></div>
+
+</body>
+</html>
+
+<script>
+  // Create WebSocket connection.
+  const socket = new WebSocket("ws://localhost:3000");
+
+  document.getElementById("fw").addEventListener("click", () => {
+    getCommand("msg", "update")  //REST API
+  })
+
+  document.getElementById("cf").addEventListener("click", () => {
+    getCommand("msg", "config")  //REST API
+  })
+
+  document.getElementById("sd").addEventListener("click", () => {
+    postCommand("msg")          //REST API
+  })
+
+  document.getElementById("rt").addEventListener("click", () => {
+    let msg = ({message: "IoT -> Endpoint: " + Date.now()}) //json
+    msg = JSON.stringify(msg)
+    document.getElementById("msg").innerHTML = msg
+    socket.send(msg); //WebSocket
+  })
+
+  const getCommand = async(id, cmd) => {
+    let url = "http://localhost:3000/iot"
+    switch (cmd) {
+      case "update":
+        url = url + "/update"
+        break;
+      case "config":
+        url = url + "/config"
+        break;
+      default:
+        //not found
+    }
+
+    try {
+      const response = await fetch(url)
+      if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+      }
+      const json = await response.json();
+      document.getElementById(id).innerHTML = json.message
+    } catch(error) {
+      console.log(error)
+    }
+  }
+
+  const postCommand = async(id) => {
+    try{
+      const response = await fetch("http://localhost:3000/iot/data", {
+        method: "POST",
+        body: JSON.stringify({iot: Date.now()}),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      if (!response.ok){
+        throw new Error(`Response states: ${response.status}`)
+      }
+      const json = await response.json()
+      document.getElementById(id).innerHTML = json.message
+    } catch(error){
+      console.log(error)
+    }
+  }
+
+</script>
+
+<style>
+  .mt {
+    margin-top: 1rem;
+  }  
+</style>
