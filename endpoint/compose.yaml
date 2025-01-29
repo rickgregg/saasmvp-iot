@@ -1,0 +1,16 @@
+services:
+  nodeapp:
+    container_name: nodeapp
+    build:
+      context: .
+    environment: 
+      NODE_ENV: production
+    ports:
+      - '3000:3000'
+  nginx:
+    container_name: nginx
+    build: ./nginx
+    ports:
+    - '80:80'
+    depends_on:
+      - nodeapp

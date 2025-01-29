@@ -16,13 +16,14 @@ wsServer.on('connection', socket => {
   socket.on('message', function message(data, isBinary) {
     const msg = isBinary ? data : data.toString()
     //decode incoming data and process accordingly
+    //display data on index.js?
     console.log(msg)
   })
 });
 
 //Endpoint Home Page
 app.get('/', (req,res) => {
-  res.sendFile("/home/rgregg/saasmvp-iot/endpoint/index.html")
+  res.sendFile(__dirname + '/index.html') 
 })
 
 //REST GET route - called by IoT fetch()
@@ -40,8 +41,8 @@ app.use(express.json())
 app.post('/iot/data', (req, res) => {
   let data = req.body
   console.log(data)
-
-  res.json({message: "Data POSTED to Endpoint " + data.iot})
+  //display data on index.js?
+  res.json({message: "POST loopback " + data.iot})
 })
 
 //`server` is a vanilla Node.js HTTP server

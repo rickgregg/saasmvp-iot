@@ -5,12 +5,13 @@
   <h1>IoT Endpoint Server</h1>
   <button type="button" id="rt">WebSocket - Send Real-Time Data to IoT Device</button>
   <div id="msg" class="mt"></div>
+  <div id="post" class="mt"></div>
 </body>
 </html>
 
 <script>
   // Create WebSocket connection.
-  const socket = new WebSocket("ws://localhost:3001");
+  const socket = new WebSocket('ws://192.168.1.19:3000');
 
   document.getElementById("rt").addEventListener("click", () => {
     let msg = ({message: "Endpoint -> IoT: " + Date.now()}) //json
