@@ -4,6 +4,7 @@ const ws = require('ws');
 const cors = require('cors');
 const app = express()
 const port = 3000
+let msg = null
 
 //need CORS to allow localhost (endpoint, IoT devices) port addresses
 app.use(cors())
@@ -14,9 +15,8 @@ app.use(cors())
 const wsServer = new ws.Server({ noServer: true });
 wsServer.on('connection', socket => {
   socket.on('message', function message(data, isBinary) {
-    const msg = isBinary ? data : data.toString()
+    msg = isBinary ? data : data.toString()
     //decode incoming data and process accordingly
-    //display data on index.js?
     console.log(msg)
   })
 });
@@ -24,6 +24,11 @@ wsServer.on('connection', socket => {
 //Endpoint Home Page
 app.get('/', (req,res) => {
   res.sendFile(__dirname + '/index.html') 
+})
+
+//REST GET route - Endpoint browser (client) dashboard
+app.get('/dashboard', (req,res) => {
+  res.json(msg)
 })
 
 //REST GET route - called by IoT fetch()
@@ -41,7 +46,6 @@ app.use(express.json())
 app.post('/iot/data', (req, res) => {
   let data = req.body
   console.log(data)
-  //display data on index.js?
   res.json({message: "POST loopback " + data.iot})
 })
 
@@ -58,3 +62,5 @@ server.on('upgrade', (request, socket, head) => {
     wsServer.emit('connection', socket, request);
   });
 });
+
+

@@ -5,20 +5,39 @@
   <h1>IoT Endpoint Server</h1>
   <button type="button" id="rt">WebSocket - Send Real-Time Data to IoT Device</button>
   <div id="msg" class="mt"></div>
-  <div id="post" class="mt"></div>
 </body>
 </html>
 
 <script>
   // Create WebSocket connection.
-  const socket = new WebSocket('ws://192.168.1.19:3000');
-
+  const socket = new WebSocket('ws://192.168.1.19:3000'); //iot device
+ 
   document.getElementById("rt").addEventListener("click", () => {
     let msg = ({message: "Endpoint -> IoT: " + Date.now()}) //json
     msg = JSON.stringify(msg)
-    document.getElementById("msg").innerHTML = msg
+    document.getElementById("msg").innerHTML = msg 
     socket.send(msg); //WebSocket
   })
+
+  setInterval( () => {
+    getDashboardData()
+  }, 1000)
+
+  const getDashboardData = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/dashboard')
+      if(!response.ok){
+        throw new Error(`Response status: ${response.status}`)
+      }
+      const json = await response.json()
+      if(json !== null){
+        document.getElementById("msg").innerHTML = ("IoT Device Reports: " + json)
+      }
+    } catch(error) {
+      console.log(error)
+    }
+  }
+
 </script>
 
 <style>

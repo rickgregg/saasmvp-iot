@@ -12,6 +12,12 @@ const gpio = require('raspi-gpio');
 const LOW = 0;
 const HIGH = 1;
 
+const scale = "fahrenheit"
+const ipaddr = "192.168.1.1"
+let ts = ""
+let temp = ""
+let tempr = {"temperature": temp, "scale": scale, "ipaddr": ipaddr, "ts": ts, }
+
 //Set up a headless websocket server that prints any events that come in
 const wsServer = new ws.Server({ noServer: true })
 wsServer.on('connection', socket => {
@@ -24,7 +30,7 @@ wsServer.on('connection', socket => {
 
 //set up node server
 const server = app.listen(port, () => {
-	console.log(`Nodejs listening on port ${port}`)
+	console.log(`Node listening on port ${port}`)
 })
 
 //set up websocket server by upgrading node server with websocket capabilities
@@ -40,11 +46,12 @@ setInterval( () => {
     //https://github.com/nebrius/raspi-i2c
     //read temperature
     const i2c = new I2C();
-    let temp = ''
     i2c.readWord(tmp102Address, tmp102TempReg, (err,data) => {
       if(err == null){
         temp = data.toString(16)
         temp = ((((Number('0x' + temp.slice(2,4) + temp.slice(0,1)))*.0625)*1.8)+32).toFixed(2)
+        tempr.temperature = temp
+        tempr.ts = Date.now()
         console.log(temp.toString() + ' F')
       }
     })
@@ -63,17 +70,17 @@ setInterval( () => {
     getCommand('config')
     postCommand()
 
-    //send data to websocket endpoint
+    //send data to websocket endpoint server
     const client = new ws('ws://192.168.1.13:3000')
     client.on('open', () => {
-      const msg = ({message: 'IoT Monitoring Loop -> Endpoint ' + Date.now()})  //json
-      client.send(JSON.stringify(msg))
+      //const msg = ({message: 'IoT Monitoring Loop -> Endpoint ' + Date.now()})  //json
+      client.send(JSON.stringify(tempr))
     })
 
     //
 
   });//eo raspi.init()
-}, 3000)
+}, 1000)
 
 
 const getCommand = async (cmd) => {
