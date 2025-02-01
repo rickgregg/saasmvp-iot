@@ -12,7 +12,7 @@ const gpio = require('raspi-gpio');
 const LOW = 0;
 const HIGH = 1;
 
-const scale = "fahrenheit"
+let scale = "F" //"F" - fahenheit, "C" - Celsius
 const ipaddr = "192.168.1.1"
 let ts = ""
 let temp = ""
@@ -24,13 +24,23 @@ wsServer.on('connection', socket => {
   socket.on('message', function message(data, isBinary) {
     const msg = isBinary ? data : data.toString()
     //decode incoming websocket message and take action
-    console.log(msg)
+    const command = JSON.parse(msg)
+    //const command = {"cmd": "scale", "scale": document.getElementById("scale").value, "ts": Date.now()}
+    switch (command.cmd){
+      case "scale":
+        scale = command.scale
+        break
+      default:
+        //error
+    }
   })
 })
 
 //set up node server
 const server = app.listen(port, () => {
 	console.log(`Node listening on port ${port}`)
+  //IoT Initialization
+  getCommand("config")
 })
 
 //set up websocket server by upgrading node server with websocket capabilities
@@ -49,10 +59,17 @@ setInterval( () => {
     i2c.readWord(tmp102Address, tmp102TempReg, (err,data) => {
       if(err == null){
         temp = data.toString(16)
-        temp = ((((Number('0x' + temp.slice(2,4) + temp.slice(0,1)))*.0625)*1.8)+32).toFixed(2)
+        if(scale == "F"){
+          //fahrenheit
+          temp = ((((Number('0x' + temp.slice(2,4) + temp.slice(0,1)))*.0625)*1.8)+32).toFixed(2)
+        } else {
+          //celsius
+          temp = ((Number('0x' + temp.slice(2,4) + temp.slice(0,1)))*.0625).toFixed(2)
+        }
         tempr.temperature = temp
+	tempr.scale = scale
         tempr.ts = Date.now()
-        console.log(temp.toString() + ' F')
+        console.log(temp.toString() + '' + scale)
       }
     })
 
@@ -66,14 +83,13 @@ setInterval( () => {
     }
 
     //test endpoint rest api's
-    getCommand('update')
-    getCommand('config')
-    postCommand()
+    //getCommand('update')  //use to get a software update for the IoT device
+    //getCommand('config')  //use to get a configuration file for the IoT device
+    //postCommand()
 
     //send data to websocket endpoint server
     const client = new ws('ws://192.168.1.13:3000')
     client.on('open', () => {
-      //const msg = ({message: 'IoT Monitoring Loop -> Endpoint ' + Date.now()})  //json
       client.send(JSON.stringify(tempr))
     })
 

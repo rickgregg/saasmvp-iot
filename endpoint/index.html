@@ -3,22 +3,27 @@
 <body>
 
   <h1>IoT Endpoint Server</h1>
-  <button type="button" id="rt">WebSocket - Send Real-Time Data to IoT Device</button>
-  <div id="msg" class="mt"></div>
+  <label for="scale">Temperature Scale:</label>
+  <select id="scale">
+    <option value="F" selected>Fahrenheit</option>
+    <option value="C">Celsius</option>
+  </select>
+  <div id="msg" class="mt">Awaiting IoT Device Report ...</div>
 </body>
 </html>
 
 <script>
-  // Create WebSocket connection.
+  // create websocket connection with IoT device.
   const socket = new WebSocket('ws://192.168.1.19:3000'); //iot device
- 
-  document.getElementById("rt").addEventListener("click", () => {
-    let msg = ({message: "Endpoint -> IoT: " + Date.now()}) //json
-    msg = JSON.stringify(msg)
-    document.getElementById("msg").innerHTML = msg 
-    socket.send(msg); //WebSocket
+  socket.addEventListener("open", () => {
+      document.getElementById("scale").addEventListener("change", () => {
+      //send command to the IoT device to change temperature scale
+      const command = {"cmd": "scale", "scale": document.getElementById("scale").value, "ts": Date.now()}
+      socket.send(JSON.stringify(command))
+    })
   })
 
+  //get data to refresh dashboard
   setInterval( () => {
     getDashboardData()
   }, 1000)

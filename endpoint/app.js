@@ -38,7 +38,10 @@ app.get('/iot/update', (req, res) => {
 
 //REST GET route - called by IoT fetch()
 app.get('/iot/config', (req, res) => {
-  res.json({message: "GET Configuration File " + Date.now()})
+  const xForwardedFor = req.header('x-forwarded-for')
+  const xRealIP = req.header('x-real-ip')
+  console.log(req)
+  res.json({message: "GET Configuration File", ts: Date.now()})
 })
 
 //REST POST route - called by IoT fetch()
