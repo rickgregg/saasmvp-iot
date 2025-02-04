@@ -5,6 +5,7 @@ const cors = require('cors');
 const app = express()
 const port = 3000
 let msg = null
+let xIotIp = null
 
 //need CORS to allow localhost (endpoint, IoT devices) port addresses
 app.use(cors())
@@ -31,6 +32,10 @@ app.get('/dashboard', (req,res) => {
   res.json(msg)
 })
 
+app.get('/iot/ip', (req, res) => {
+  res.json({iotip: xIotIp})
+})
+
 //REST GET route - called by IoT fetch()
 app.get('/iot/update', (req, res) => {
   res.json({message: "GET Firmware Update " + Date.now()})
@@ -38,10 +43,8 @@ app.get('/iot/update', (req, res) => {
 
 //REST GET route - called by IoT fetch()
 app.get('/iot/config', (req, res) => {
-  const xForwardedFor = req.header('x-forwarded-for')
-  const xRealIP = req.header('x-real-ip')
-  console.log(req)
-  res.json({message: "GET Configuration File", ts: Date.now()})
+  xIotIp = req.header('x-iot-ip')
+  res.json({message: "IoT Configuration", iotip: xIotIp, ts: Date.now()})
 })
 
 //REST POST route - called by IoT fetch()

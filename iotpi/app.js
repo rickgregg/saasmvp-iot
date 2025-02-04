@@ -1,6 +1,7 @@
 //app.js
 const express = require('express')
 const ws = require('ws')
+const os = require('os')
 const app = express()
 const port = 3000
 
@@ -13,7 +14,7 @@ const LOW = 0;
 const HIGH = 1;
 
 let scale = "F" //"F" - fahenheit, "C" - Celsius
-const ipaddr = "192.168.1.1"
+const ipaddr = ""
 let ts = ""
 let temp = ""
 let tempr = {"temperature": temp, "scale": scale, "ipaddr": ipaddr, "ts": ts, }
@@ -38,9 +39,10 @@ wsServer.on('connection', socket => {
 
 //set up node server
 const server = app.listen(port, () => {
-	console.log(`Node listening on port ${port}`)
+  console.log(`Node listening on port ${port}`)
   //IoT Initialization
-  getCommand("config")
+  tempr.ipaddr = getIp()
+  getCommand('config')
 })
 
 //set up websocket server by upgrading node server with websocket capabilities
@@ -67,7 +69,7 @@ setInterval( () => {
           temp = ((Number('0x' + temp.slice(2,4) + temp.slice(0,1)))*.0625).toFixed(2)
         }
         tempr.temperature = temp
-	tempr.scale = scale
+	      tempr.scale = scale
         tempr.ts = Date.now()
         console.log(temp.toString() + '' + scale)
       }
@@ -82,11 +84,6 @@ setInterval( () => {
       gpio12.write(HIGH)
     }
 
-    //test endpoint rest api's
-    //getCommand('update')  //use to get a software update for the IoT device
-    //getCommand('config')  //use to get a configuration file for the IoT device
-    //postCommand()
-
     //send data to websocket endpoint server
     const client = new ws('ws://192.168.1.13:3000')
     client.on('open', () => {
@@ -98,7 +95,8 @@ setInterval( () => {
   });//eo raspi.init()
 }, 1000)
 
-
+//get the configuration file for the iot device (cmd) = 'config'
+//get a software update file for the iot device (cmd) = 'update'
 const getCommand = async (cmd) => {
   let url = 'http://192.168.1.13/iot'
   switch(cmd) {
@@ -113,7 +111,11 @@ const getCommand = async (cmd) => {
   }
 
   try {
-    const response = await fetch(url)
+    const response = await fetch(url, {
+      headers: {
+        'x-iot-ip': tempr.ipaddr
+      }
+    })
     if(!response.ok){
       throw new Error(`Response status: ${response.status}`)
     }
@@ -124,6 +126,7 @@ const getCommand = async (cmd) => {
   }
 }
 
+//send bulk data from iot device to endpoint
 const postCommand = async () => {
   try {
     const response = await fetch('http://192.168.1.13/iot/data', {
@@ -141,4 +144,18 @@ const postCommand = async () => {
   } catch(error) {
     console.log(error)
   }
+}
+
+const getIp = () => {
+  const interfaces = os.networkInterfaces();
+  const addresses = [];
+
+  for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name]) {
+          if (iface.family === 'IPv4' && !iface.internal) {
+              addresses.push(iface.address);
+          }
+      }
+  }
+  return addresses[0]
 }

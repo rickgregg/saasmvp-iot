@@ -13,14 +13,9 @@
 </html>
 
 <script>
-  // create websocket connection with IoT device.
-  const socket = new WebSocket('ws://192.168.1.19:3000'); //iot device
-  socket.addEventListener("open", () => {
-      document.getElementById("scale").addEventListener("change", () => {
-      //send command to the IoT device to change temperature scale
-      const command = {"cmd": "scale", "scale": document.getElementById("scale").value, "ts": Date.now()}
-      socket.send(JSON.stringify(command))
-    })
+  window.addEventListener('load', (event) => {
+    // create websocket connection with IoT device.
+    getIt()
   })
 
   //get data to refresh dashboard
@@ -39,6 +34,45 @@
         document.getElementById("msg").innerHTML = ("IoT Device Reports: " + json)
       }
     } catch(error) {
+      console.log(error)
+    }
+  }
+
+  const getIt = async () => {
+    let iotIp = null;
+    let url = ""
+    iotIp = (await getIotIp())
+    if(iotIp.iotip == null){
+      console.log('awaiting IoT registration ...')
+      getIt()
+    } else {
+      url = 'ws://' + iotIp.iotip + ':3000'
+      console.log('IoT registered: ', url)
+      //const socket = new WebSocket('ws://192.168.1.19:3000'); //iot device
+      const socket = new WebSocket(url); //iot device
+        socket.addEventListener("open", () => {
+          document.getElementById("scale").addEventListener("change", () => {
+            //send command to the IoT device to change temperature scale
+            const command = {"cmd": "scale", "scale": document.getElementById("scale").value, "ts": Date.now()}
+            socket.send(JSON.stringify(command))
+          })
+        })
+        socket.addEventListener('error', () => {
+          console.log(event)
+        })
+    }
+    //
+  }
+
+  const getIotIp = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/iot/ip')
+      if(!response.ok){
+        throw new Error(`Response status: ${response.status}`)
+      }
+      const json = await response.json()
+      return json
+    } catch (error){
       console.log(error)
     }
   }
