@@ -36,6 +36,10 @@ app.get('/iot/ip', (req, res) => {
   res.json({iotip: xIotIp})
 })
 
+app.get('/iot/close', (req,res) => {
+  res.json({iotip: null})
+})
+
 //REST GET route - called by IoT fetch()
 app.get('/iot/update', (req, res) => {
   res.json({message: "GET Firmware Update " + Date.now()})

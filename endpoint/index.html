@@ -13,14 +13,24 @@
 </html>
 
 <script>
+  let socket = null
+  let restart = 0
   window.addEventListener('load', (event) => {
-    // create websocket connection with IoT device.
-    getIt()
+    //create websocket connection with IoT device.
+    getIotReg()
+    document.getElementById("scale").addEventListener("change", () => {
+      const command = {"cmd": "scale", "scale": document.getElementById("scale").value, "ts": Date.now()}
+      if(socket.readyState == 1){
+        socket.send(JSON.stringify(command))
+      }
+    })
   })
 
   //get data to refresh dashboard
   setInterval( () => {
-    getDashboardData()
+    if(socket !== null && socket.readyState == 1){
+      getDashboardData()
+    }
   }, 1000)
 
   const getDashboardData = async () => {
@@ -38,30 +48,40 @@
     }
   }
 
-  const getIt = async () => {
+  const getIotReg = async () => {
     let iotIp = null;
     let url = ""
     iotIp = (await getIotIp())
-    if(iotIp.iotip == null){
-      console.log('awaiting IoT registration ...')
-      getIt()
+    if( iotIp.iotip == null){
+      console.log('awaiting IoT endpoint registration ...')
+      //awaiting IoT endpoint registration
+      getIotReg()
     } else {
+      //iot device has been registered with endpoint
       url = 'ws://' + iotIp.iotip + ':3000'
+      socket = new WebSocket(url); //iot device
       console.log('IoT registered: ', url)
-      //const socket = new WebSocket('ws://192.168.1.19:3000'); //iot device
-      const socket = new WebSocket(url); //iot device
-        socket.addEventListener("open", () => {
-          document.getElementById("scale").addEventListener("change", () => {
-            //send command to the IoT device to change temperature scale
-            const command = {"cmd": "scale", "scale": document.getElementById("scale").value, "ts": Date.now()}
-            socket.send(JSON.stringify(command))
-          })
-        })
-        socket.addEventListener('error', () => {
-          console.log(event)
-        })
-    }
-    //
+      //
+      socket.addEventListener("open", (event) => {
+        console.log('websocket open: ', event)
+      })
+      socket.addEventListener('close', (event) => {
+        /* 
+        ** The websocket will close with a 1006 error which typically indicates that the connection was closed abnormally, 
+        ** without a proper closing handshake. This will happen when the IoT device can't reach the endpoint due to a power
+        ** or network failure
+        */
+        restart++
+        document.getElementById("msg").innerHTML = ("IoT Connection Failure ... Attempting Restart " + restart.toString())
+        console.log('websocket closed: ', event)
+        cancelIotReg()
+        getIotReg()
+      })
+      socket.addEventListener('error', (event) => {
+          console.log('websocket error: ', event)
+      })
+      //
+    }//eo if-else
   }
 
   const getIotIp = async () => {
@@ -77,6 +97,19 @@
     }
   }
 
+  const cancelIotReg = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/iot/close')
+      if(!response.ok){
+        throw new Error(`Response status: ${response.status}`)
+      }
+      const json = await response.json()
+      return json
+    } catch (error){
+      console.log(error)
+    }
+  }
+  //
 </script>
 
 <style>
@@ -84,3 +117,4 @@
     margin-top: 1rem;
   }  
 </style>
+

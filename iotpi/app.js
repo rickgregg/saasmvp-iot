@@ -13,11 +13,12 @@ const gpio = require('raspi-gpio');
 const LOW = 0;
 const HIGH = 1;
 
-let scale = "F" //"F" - fahenheit, "C" - Celsius
+let scale = "F" //"F" - Fahrenheit, "C" - Celsius
 const ipaddr = ""
 let ts = ""
 let temp = ""
 let tempr = {"temperature": temp, "scale": scale, "ipaddr": ipaddr, "ts": ts, }
+let initFlag = false
 
 //Set up a headless websocket server that prints any events that come in
 const wsServer = new ws.Server({ noServer: true })
@@ -26,7 +27,7 @@ wsServer.on('connection', socket => {
     const msg = isBinary ? data : data.toString()
     //decode incoming websocket message and take action
     const command = JSON.parse(msg)
-    //const command = {"cmd": "scale", "scale": document.getElementById("scale").value, "ts": Date.now()}
+    //example: const command = {"cmd": "scale", "scale": document.getElementById("scale").value, "ts": Date.now()}
     switch (command.cmd){
       case "scale":
         scale = command.scale
@@ -42,7 +43,8 @@ const server = app.listen(port, () => {
   console.log(`Node listening on port ${port}`)
   //IoT Initialization
   tempr.ipaddr = getIp()
-  getCommand('config')
+  //getCommand('config')
+  getIt()
 })
 
 //set up websocket server by upgrading node server with websocket capabilities
@@ -53,47 +55,60 @@ server.on('upgrade', (request, socket, head) => {
 })
 
 //** IoT MONITORING LOOP **
-setInterval( () => {
-  raspi.init(() => {
-    //https://github.com/nebrius/raspi-i2c
-    //read temperature
-    const i2c = new I2C();
-    i2c.readWord(tmp102Address, tmp102TempReg, (err,data) => {
-      if(err == null){
-        temp = data.toString(16)
-        if(scale == "F"){
-          //fahrenheit
-          temp = ((((Number('0x' + temp.slice(2,4) + temp.slice(0,1)))*.0625)*1.8)+32).toFixed(2)
-        } else {
-          //celsius
-          temp = ((Number('0x' + temp.slice(2,4) + temp.slice(0,1)))*.0625).toFixed(2)
+
+  setInterval( () => {
+    console.log(initFlag, Date.now())
+    iotLoop(initFlag)
+  }, 1000 )
+
+
+
+const iotLoop = (initFlag) => {
+  if(initFlag){
+    raspi.init(() => {
+      //https://github.com/nebrius/raspi-i2c
+      //read temperature
+      const i2c = new I2C();
+      i2c.readWord(tmp102Address, tmp102TempReg, (err,data) => {
+        if(err == null){
+          temp = data.toString(16)
+          if(scale == "F"){
+            //fahrenheit
+            temp = ((((Number('0x' + temp.slice(2,4) + temp.slice(0,1)))*.0625)*1.8)+32).toFixed(2)
+          } else {
+            //celsius
+            temp = ((Number('0x' + temp.slice(2,4) + temp.slice(0,1)))*.0625).toFixed(2)
+          }
+          tempr.temperature = temp
+          tempr.scale = scale
+          tempr.ts = Date.now()
+          console.log(temp.toString() + '' + scale)
         }
-        tempr.temperature = temp
-	      tempr.scale = scale
-        tempr.ts = Date.now()
-        console.log(temp.toString() + '' + scale)
+      })
+
+      //https://github.com/nebrius/raspi-gpio
+      //heartbeat led
+      const gpio12 = new gpio.DigitalOutput('P1-32')
+      if (gpio12.value == HIGH){
+        gpio12.write(LOW)
+      }else{
+        gpio12.write(HIGH)
       }
-    })
 
-    //https://github.com/nebrius/raspi-gpio
-    //heartbeat led
-    const gpio12 = new gpio.DigitalOutput('P1-32')
-    if (gpio12.value == HIGH){
-      gpio12.write(LOW)
-    }else{
-      gpio12.write(HIGH)
-    }
+      //send data to websocket endpoint server
+      const client = new ws('ws://192.168.1.13:3000')
+      client.on('open', () => {
+        client.send(JSON.stringify(tempr))
+      })
+      client.on('error', () => {
+        console.log('websocket closed ' + Date.now())
+      })
 
-    //send data to websocket endpoint server
-    const client = new ws('ws://192.168.1.13:3000')
-    client.on('open', () => {
-      client.send(JSON.stringify(tempr))
-    })
+      //
 
-    //
-
-  });//eo raspi.init()
-}, 1000)
+    });//eo raspi.init()
+  }//eo if(InitFlag)
+}
 
 //get the configuration file for the iot device (cmd) = 'config'
 //get a software update file for the iot device (cmd) = 'update'
@@ -122,8 +137,10 @@ const getCommand = async (cmd) => {
     const json = await response.json()
     console.log(json)
   }catch(error){
-    console.log(error)
+    console.log("getCommand() fetch error " + Date.now())
+    return false
   }
+  return true
 }
 
 //send bulk data from iot device to endpoint
@@ -158,4 +175,15 @@ const getIp = () => {
       }
   }
   return addresses[0]
+}
+
+const getIt = async () => {
+  if(!await getCommand('config')){
+    console.log('awaiting iot endpoint connection ...', initFlag, Date.now())
+    getIt()
+  } else {
+    initFlag = true
+    console.log('iot connected to endpoint', initFlag, Date.now())
+    return true
+  }
 }
