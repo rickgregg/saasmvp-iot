@@ -8,13 +8,15 @@
     <option value="F" selected>Fahrenheit</option>
     <option value="C">Celsius</option>
   </select>
-  <div id="msg" class="mt">Awaiting IoT Device Report ...</div>
+  <div id="msg" class="mt">Awaiting IoT Endpoint Registration ...</div>
 </body>
 </html>
 
 <script>
   let socket = null
+  let connLostFlag = false;
   let restart = 0
+  let connCount = 0
   window.addEventListener('load', (event) => {
     //create websocket connection with IoT device.
     getIotReg()
@@ -53,17 +55,22 @@
     let url = ""
     iotIp = (await getIotIp())
     if( iotIp.iotip == null){
-      console.log('awaiting IoT endpoint registration ...')
       //awaiting IoT endpoint registration
+      showProgress(connCount)
       getIotReg()
     } else {
       //iot device has been registered with endpoint
       url = 'ws://' + iotIp.iotip + ':3000'
       socket = new WebSocket(url); //iot device
-      console.log('IoT registered: ', url)
       //
       socket.addEventListener("open", (event) => {
         console.log('websocket open: ', event)
+        if( connLostFlag ){
+          connLostFlag = false
+          restart = 0
+          //restore dashboard state
+          restoreState()
+        }
       })
       socket.addEventListener('close', (event) => {
         /* 
@@ -74,11 +81,12 @@
         restart++
         document.getElementById("msg").innerHTML = ("IoT Connection Failure ... Attempting Restart " + restart.toString())
         console.log('websocket closed: ', event)
+        connLostFlag = true
         cancelIotReg()
         getIotReg()
       })
       socket.addEventListener('error', (event) => {
-          console.log('websocket error: ', event)
+          //not used
       })
       //
     }//eo if-else
@@ -109,6 +117,36 @@
       console.log(error)
     }
   }
+
+  //use this function to restore the state of the endpoint browser client after a connection failure
+  const restoreState = () => {
+    //restore the state of the temperature scale setting with the IoT device
+    const command = {"cmd": "scale", "scale": document.getElementById("scale").value, "ts": Date.now()}
+    if(socket.readyState == 1){
+      socket.send(JSON.stringify(command))
+    }
+    //other specific state restoration here
+  }
+
+  const showProgress = () => {
+    if (connCount == 0){
+      connCount++
+      document.getElementById("msg").innerHTML = "Awaiting IoT Endpoint Registration ... /"
+      return
+    }
+    if (connCount == 1){
+      connCount++
+      document.getElementById("msg").innerHTML = "Awaiting IoT Endpoint Registration ... +"
+      return
+    }
+    if (connCount == 2){
+      connCount = 0
+      document.getElementById("msg").innerHTML = "Awaiting IoT Endpoint Registration ... \\"
+      return
+    }
+    //
+  }
+
   //
 </script>
 
