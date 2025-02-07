@@ -17,6 +17,7 @@
   let connLostFlag = false;
   let restart = 0
   let connCount = 0
+  
   window.addEventListener('load', (event) => {
     //create websocket connection with IoT device.
     getIotReg()
@@ -35,6 +36,7 @@
     }
   }, 1000)
 
+  //Get any data from the endpoint that needs to be shown in the endpoint client browser dashboard
   const getDashboardData = async () => {
     try {
       const response = await fetch('http://localhost:3000/dashboard')
@@ -50,6 +52,7 @@
     }
   }
 
+  //establish and maintain a websocket connection between the endpoint and the IoT device
   const getIotReg = async () => {
     let iotIp = null;
     let url = ""
@@ -79,6 +82,7 @@
         ** or network failure
         */
         restart++
+        //show restart activity
         document.getElementById("msg").innerHTML = ("IoT Connection Failure ... Attempting Restart " + restart.toString())
         console.log('websocket closed: ', event)
         connLostFlag = true
@@ -92,6 +96,7 @@
     }//eo if-else
   }
 
+  //get the IP address of the IoT device
   const getIotIp = async () => {
     try {
       const response = await fetch('http://localhost:3000/iot/ip')
@@ -105,6 +110,7 @@
     }
   }
 
+  //inform the endpoint that the IoT connection with the endpoint has been lost and needs to be cancelled (reset)
   const cancelIotReg = async () => {
     try {
       const response = await fetch('http://localhost:3000/iot/close')
@@ -128,6 +134,7 @@
     //other specific state restoration here
   }
 
+  //progress indicator to show activity
   const showProgress = () => {
     if (connCount == 0){
       connCount++
