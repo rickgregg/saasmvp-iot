@@ -1,4 +1,10 @@
-//app.js
+/*
+** app.js
+**
+** richard l. gregg
+** The saasmvp Project
+** February 8, 2025
+*/
 const express = require('express')
 const ws = require('ws')
 const os = require('os')
@@ -19,17 +25,18 @@ let ts = ""
 let temp = ""
 let tempr = {"temperature": temp, "scale": scale, "ipaddr": ipaddr, "ts": ts, }
 let initFlag = false
+let logFlag = true
 
-//Set up a headless websocket server that prints any events that come in
+//configure a headless websocket server, decode incoming websocket message and take action
 const wsServer = new ws.Server({ noServer: true })
 wsServer.on('connection', socket => {
   socket.on('message', function message(data, isBinary) {
     const msg = isBinary ? data : data.toString()
-    //decode incoming websocket message and take action
+    //example command: const command = {"cmd": "scale", "scale": document.getElementById("scale").value, "ts": Date.now()}
     const command = JSON.parse(msg)
-    //example: const command = {"cmd": "scale", "scale": document.getElementById("scale").value, "ts": Date.now()}
     switch (command.cmd){
       case "scale":
+        //change the temperature scale
         scale = command.scale
         break
       default:
@@ -40,11 +47,9 @@ wsServer.on('connection', socket => {
 
 //set up node server
 const server = app.listen(port, () => {
-  console.log(`Node listening on port ${port}`)
-  //IoT Initialization
-  tempr.ipaddr = getIp()
-  //getCommand('config')
-  getIt()
+  if (logFlag) console.log(new Date(), `Node Up and Running on Port ${port}`)
+  tempr.ipaddr = getIotIP()
+  regIotDevice()
 })
 
 //set up websocket server by upgrading node server with websocket capabilities
@@ -54,15 +59,12 @@ server.on('upgrade', (request, socket, head) => {
   })
 })
 
-//** IoT MONITORING LOOP **
+//** IoT LOOP **
+setInterval( () => {
+  iotLoop(initFlag)
+}, 1000 )
 
-  setInterval( () => {
-    console.log(initFlag, Date.now())
-    iotLoop(initFlag)
-  }, 1000 )
-
-
-
+//main IoT monitoring and control function
 const iotLoop = (initFlag) => {
   if(initFlag){
     raspi.init(() => {
@@ -82,7 +84,7 @@ const iotLoop = (initFlag) => {
           tempr.temperature = temp
           tempr.scale = scale
           tempr.ts = Date.now()
-          console.log(temp.toString() + '' + scale)
+          if (logFlag) console.log(new Date(), 'Temperature: ' + temp.toString() + '' + scale)
         }
       })
 
@@ -100,8 +102,11 @@ const iotLoop = (initFlag) => {
       client.on('open', () => {
         client.send(JSON.stringify(tempr))
       })
+      client.on('close', () => {
+        if (logFlag) console.log('IoT Endpoint Communiction Failure. Attempting Restart ...')
+      })
       client.on('error', () => {
-        console.log('websocket closed ' + Date.now())
+        //
       })
 
       //
@@ -128,6 +133,7 @@ const getCommand = async (cmd) => {
   try {
     const response = await fetch(url, {
       headers: {
+        //endpoint dynamic IoT registration header
         'x-iot-ip': tempr.ipaddr
       }
     })
@@ -137,7 +143,6 @@ const getCommand = async (cmd) => {
     const json = await response.json()
     console.log(json)
   }catch(error){
-    console.log("getCommand() fetch error " + Date.now())
     return false
   }
   return true
@@ -163,7 +168,7 @@ const postCommand = async () => {
   }
 }
 
-const getIp = () => {
+const getIotIP = () => {
   const interfaces = os.networkInterfaces();
   const addresses = [];
 
@@ -177,13 +182,13 @@ const getIp = () => {
   return addresses[0]
 }
 
-const getIt = async () => {
+const regIotDevice = async () => {
   if(!await getCommand('config')){
-    console.log('awaiting iot endpoint connection ...', initFlag, Date.now())
-    getIt()
+    if (logFlag) console.log(new Date(), 'Awaiting IoT Endpoint Connection ...')
+    regIotDevice()
   } else {
     initFlag = true
-    console.log('iot connected to endpoint', initFlag, Date.now())
+    if (logFlag) console.log(new Date(), 'IoT Connected to the Endpoint.')
     return true
   }
 }
