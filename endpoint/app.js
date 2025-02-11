@@ -1,4 +1,12 @@
-//endpoint
+/*
+** app.js
+** endpoint - Endpoint Server
+**
+** richard l. gregg
+** The saasmvp Project
+** https://saasmvp.org
+** February 8, 2025
+*/
 const express = require('express')
 const ws = require('ws');
 const cors = require('cors');

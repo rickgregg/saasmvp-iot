@@ -1,13 +1,19 @@
 {
   "name": "iotpi",
   "version": "1.0.0",
-  "description": "",
+  "description": "Minimally Viable Product (MVP) Internet-of-Things (IoT) Software-as-a-Service (SaaS) Reference Implementation",
+  "keywords": ["Node", "Express", "WebSockets", "REST APIs", "Internet-of-Things", "IoT", "SaaS", "MVP", "nginx", "Docker", "Raspberry Pi"],
+  "homepage": "https://saasmvp.org",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rickgregg/saasmvp-iot"
+  },
+  "author": "richard l. gregg <rick.gregg@saasmvp.org> (https://www.linkedin.com/in/rickgr/)",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.21.2",
     "raspi": "^6.0.1",

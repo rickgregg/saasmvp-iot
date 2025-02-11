@@ -1,8 +1,10 @@
 /*
 ** app.js
+** iotpi - Raspberry Pi Zero 2W IoT Server
 **
 ** richard l. gregg
 ** The saasmvp Project
+** https://saasmvp.org
 ** February 8, 2025
 */
 const express = require('express')
@@ -25,6 +27,7 @@ let ts = ""
 let temp = ""
 let tempr = {"temperature": temp, "scale": scale, "ipaddr": ipaddr, "ts": ts, }
 let initFlag = false
+let connErr = false
 let logFlag = true
 
 //configure a headless websocket server, decode incoming websocket message and take action
@@ -84,7 +87,7 @@ const iotLoop = (initFlag) => {
           tempr.temperature = temp
           tempr.scale = scale
           tempr.ts = Date.now()
-          if (logFlag) console.log(new Date(), 'Temperature: ' + temp.toString() + '' + scale)
+          if (logFlag && !connErr) console.log(new Date(), 'Temperature: ' + temp.toString() + '' + scale)
         }
       })
 
@@ -97,13 +100,21 @@ const iotLoop = (initFlag) => {
         gpio12.write(HIGH)
       }
 
-      //send data to websocket endpoint server
+      /*
+      ** Establish connectivity between the IoT device and the Endpoint Server WebSocket
+      **
+      ** NOTE: by putting this in the init loop, connectivity can be automatically re-established
+      ** when a connection that has already been established between the IoT device and the Endpoint Server
+      ** and subsequently broken by the Endpoint Server is re-established by the Endpoint Server.
+      */
       const client = new ws('ws://192.168.1.13:3000')
       client.on('open', () => {
+        connErr = false
         client.send(JSON.stringify(tempr))
       })
       client.on('close', () => {
-        if (logFlag) console.log('IoT Endpoint Communiction Failure. Attempting Restart ...')
+        connErr = true
+        if (logFlag) console.log(new Date(), 'IoT Endpoint Communication Failure. Attempting Restart ...')
       })
       client.on('error', () => {
         //

@@ -1,5 +1,14 @@
-//iot
-//NOTE: If ypu start IoT device (localhost:3001) without starting Endpoint first (localhost:3000) you will get ECONNREFUSED Error
+/*
+** app.js
+** iot - IoT Test Stub
+**
+** richard l. gregg
+** The saasmvp Project
+** https://saasmvp.org
+** February 8, 2025
+*/
+
+//NOTE: If you start IoT device (localhost:3001) without starting Endpoint first (localhost:3000) you will get ECONNREFUSED Error
 const express = require('express')
 const ws = require('ws');
 const app = express()
