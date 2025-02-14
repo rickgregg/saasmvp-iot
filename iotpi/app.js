@@ -1,6 +1,6 @@
 /*
 ** app.js
-** iotpi - Raspberry Pi Zero 2W IoT Server
+** iotpi - Raspberry Pi Zero 2W IoT Node Server
 **
 ** richard l. gregg
 ** The saasmvp Project
@@ -29,6 +29,9 @@ let tempr = {"temperature": temp, "scale": scale, "ipaddr": ipaddr, "ts": ts, }
 let initFlag = false
 let connErr = false
 let logFlag = true
+
+//Endpoint Server IP Address
+const endpointIP = '192.168.1.13'
 
 //configure a headless websocket server, decode incoming websocket message and take action
 const wsServer = new ws.Server({ noServer: true })
@@ -107,7 +110,7 @@ const iotLoop = (initFlag) => {
       ** when a connection that has already been established between the IoT device and the Endpoint Server
       ** and subsequently broken by the Endpoint Server is re-established by the Endpoint Server.
       */
-      const client = new ws('ws://192.168.1.13:3000')
+      const client = new ws('ws://' + endpointIP + ':3000')
       client.on('open', () => {
         connErr = false
         client.send(JSON.stringify(tempr))
@@ -129,12 +132,13 @@ const iotLoop = (initFlag) => {
 //get the configuration file for the iot device (cmd) = 'config'
 //get a software update file for the iot device (cmd) = 'update'
 const getCommand = async (cmd) => {
-  let url = 'http://192.168.1.13/iot'
+  let url = 'http://' + endpointIP + '/iot'
   switch(cmd) {
     case 'update':
       url = url + '/update'
       break;
     case 'config':
+      //IoT dynamic registration and initialization
       url = url + '/config'
       break;
     default:
@@ -162,7 +166,7 @@ const getCommand = async (cmd) => {
 //send bulk data from iot device to endpoint
 const postCommand = async () => {
   try {
-    const response = await fetch('http://192.168.1.13/iot/data', {
+    const response = await fetch('http://' + endpointIP + '/iot/data', {
       method: 'POST',
       body: JSON.stringify({iot: Date.now()}),
       headers: {
@@ -179,6 +183,7 @@ const postCommand = async () => {
   }
 }
 
+//get IoT IP address for dynakic registration with Endpoint Server
 const getIotIP = () => {
   const interfaces = os.networkInterfaces();
   const addresses = [];
@@ -193,6 +198,7 @@ const getIotIP = () => {
   return addresses[0]
 }
 
+//register IoT device with Endpoint Server
 const regIotDevice = async () => {
   if(!await getCommand('config')){
     if (logFlag) console.log(new Date(), 'Awaiting IoT Endpoint Connection ...')
