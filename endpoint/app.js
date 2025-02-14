@@ -30,7 +30,7 @@ wsServer.on('connection', socket => {
   })
 });
 
-//Endpoint Home Page
+//Endpoint Home Page - Dashboard
 app.get('/', (req,res) => {
   res.sendFile(__dirname + '/index.html') 
 })
@@ -40,10 +40,12 @@ app.get('/dashboard', (req,res) => {
   res.json(msg)
 })
 
+//GET IoT IP address
 app.get('/iot/ip', (req, res) => {
   res.json({iotip: xIotIp})
 })
 
+//cancel IoT device registration endpoint
 app.get('/iot/close', (req,res) => {
   res.json({iotip: null})
 })
@@ -53,9 +55,10 @@ app.get('/iot/update', (req, res) => {
   res.json({message: "GET Firmware Update " + Date.now()})
 })
 
-//REST GET route - called by IoT fetch()
+//dynamic IoT device registration endpoint 
 app.get('/iot/config', (req, res) => {
   xIotIp = req.header('x-iot-ip')
+  //confirm registration and return any required IoT initialization data
   res.json({message: "IoT Configuration", iotip: xIotIp, ts: Date.now()})
 })
 
