@@ -143,6 +143,12 @@ const getCommand = async (cmd) => {
       break;
     default:
       //not found
+      return false
+  }
+
+  if(cmd == 'update'){
+    //firmware update not implemented
+    return false
   }
 
   try {
@@ -183,7 +189,7 @@ const postCommand = async () => {
   }
 }
 
-//get IoT IP address for dynakic registration with Endpoint Server
+//get IoT IP address for dynamic registration with Endpoint Server
 const getIotIP = () => {
   const interfaces = os.networkInterfaces();
   const addresses = [];
