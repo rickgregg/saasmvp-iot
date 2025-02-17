@@ -17,7 +17,7 @@ The **saasmvp-iot** project GitHub repository contains three directories:
 1.	The [**endpoint**](#endpoint) directory contains the Endpoint Server. All IoT devices communicate with the Endpoint Server. The Endpoint Server provides a browser client on http port 80 consisting of a near real time dashboard to control the IoT device temperature scale (Fahrenheit, Celsius) and display temperature updates from the IoT device.
 
 2.	The [**iot**](#iot) directory has a simulated IoT device that is used to demonstrate the fundamental use of WebSockets and the REST API with the Endpoint Server.
-3.	The [**iotpi**](#iotpi) directory contains the software that is installed on the Raspberry Pi Zero 2W which tranforms it into an IoT device. The software implements both 1) dynamic registration of the IoT device with the Endpoint Server; and 2) connectivity maintenance in the case of a power or communications failure with the Endpoint Server. You can learn more in the section of this document entitled [Dynamic IoT Registration and Communication Connection Maintenance](#Dynamic-IoT-Registration-and-Communication-Connection-Maintenance).
+3.	The [**iotpi**](#iotpi) directory contains the software that is installed on the Raspberry Pi Zero 2W which tranforms it into an IoT device. The software implements both 1) dynamic registration of the IoT device with the Endpoint Server; and 2) connectivity maintenance in the case of a power or communications failure with the Endpoint Server. You can learn more in the section of this document entitled [Dynamic IoT Registration and Connection Maintenance](#Dynamic-IoT-Registration-and-Connection-Maintenance).
 
 You can clone the GitHub repository to your local machine using the following command from your terminal: `https://github.com/rickgregg/saasmvp-iot.git`
 
@@ -129,7 +129,7 @@ These messages are the result of the IoT test stub establishing a WebSocket conn
 12.	The **WebSocket – Send Real-Time Data** button sends a **WebSocket** message from the IoT test stub to the Endpoint Server which is displayed in the Endpoint Server terminal and the Endpoint Server client browser like `{"message":"IoT -> Endpoint: 1739141995976"}`
 
 ## iotpi
-The **iotpi** folder (`./iotpi`) contains the software that transforms the Raspberry Pi Zero 2W into an Internet-of-Things (IoT) device that can communicate with an Endpoint Server. The IoT device acts as a Node server which runs a program (`app.js`) that acquires temperature sensor data and controls the IoT device. The **iotpi** software implements both 1) dynamic registration of the IoT device with the Endpoint Server; and 2) connectivity maintenance in the case of a power or communications failure with the Endpoint Server. You can learn more in the section of this document entitled [Dynamic IoT Registration and Communication Connection Maintenance](#Dynamic-IoT-Registration-and-Communication-Connection-Maintenance).  
+The **iotpi** folder (`./iotpi`) contains the software that transforms the Raspberry Pi Zero 2W into an Internet-of-Things (IoT) device that can communicate with an Endpoint Server. The IoT device acts as a Node server which runs a program (`app.js`) that acquires temperature sensor data and controls the IoT device. The **iotpi** software implements both 1) dynamic registration of the IoT device with the Endpoint Server; and 2) connectivity maintenance in the case of a power or communications failure with the Endpoint Server. You can learn more in the section of this document entitled [Dynamic IoT Registration and Connection Maintenance](#Dynamic-IoT-Registration-and-Connection-Maintenance).  
 
 ### Raspberry Pi Zero 2W
 A [Raspberry Pi Zero 2W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/) was chosen for the IoT device because of it’s low cost and limited capabilities to stress the performance of the reference implementation. The Raspberry Pi Zero 2W has built in Wi-Fi networking to support testing behind a firewall. Since the goal of this project was to use JavaScript wherever possible, the npm libraries [raspi](https://www.npmjs.com/package/raspi), [raspi-gpio](https://www.npmjs.com/package/raspi-gpio), and [raspi-i2c](https://www.npmjs.com/package/raspi-i2c) provide support for interfacing the Raspberry Pi hardware with the Node server running on port 3000 of the Raspberry Pi. If you are using hardware other than Raspberry Pi, you can obtain broader JavaScript hardware support from [Johnny-Five](https://johnny-five.io/).
@@ -149,7 +149,7 @@ You will need to build the Raspberry Pi Temperature Sensor Circuit using a proto
 | 1 | PRT-14491 | Resistor 10K Ohm 1/4 Watt PTH - 20 pack (Thick Leads) |
 | 1 | SEN-13314 | SparkFun Digital Temperature Sensor Breakout - TMP102 |
 
-#### Wiring the Prototype Boad
+#### Wiring the Prototype Board
 You can follow the steps below to wire the Temperature Sensor Circuit. The table illustrates the interface between the Raspberry Pi Zero 2W 40 pin GPIO header and the prototype board.
 
 | Raspberry Pi Zero 2W 40 pin GPIO header | Prototype Board |
@@ -282,7 +282,7 @@ Here’s what is happening. 1) the IoT Node Server and IoT application (app.js) 
 
 5.	A shell script (`iot-post-test.sh`) is available in the **iotpi** directory (`./iotpi`) to exercise the HTTP POST REST API interaction between the IoT device and the Endpoint Server. From the Raspberry Pi terminal, navigate to the **iotpi** directory and enter the command `./iot-post-test.sh` to send a HTTP POST REST API message to the Endpoint Server with a simple json body `{iot: ts}` where ts is the timestamp of the Linux epoch. If the Endpoint Server is running and everything is working correctly, you will see the json object `{“message”: “POST loopback <ts>”}` displayed on the Raspberry Pi terminal where ts is the timestamp of the Linux epoch echoed back to the IoT device from the Endpoint Server.
 
-#### Dynamic IoT Registration and Communication Connection Maintenance 
+#### Dynamic IoT Registration and Connection Maintenance 
 
 The following steps can be used to explore the use of dynamic IoT Endpoint Server registration which includes a primer on how communications are established and maintained between the IoT device and the Endpoint Server in the case of a connectivty issue or power failure.
 
