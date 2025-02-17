@@ -14,10 +14,10 @@ Get documentation in this README file for **saasmvp-iot**. You can find the docu
 
 # saasmvp-iot
 The **saasmvp-iot** project GitHub repository contains three directories:
-1.	The **endpoint** directory contains the Endpoint Server. All IoT devices communicate with the Endpoint Server. The Endpoint Server provides a browser client on http port 80 consisting of a near real time dashboard to control the IoT device temperature scale (Fahrenheit, Celsius) and display temperature updates from the IoT device.
+1.	The [**endpoint**](#endpoint) directory contains the Endpoint Server. All IoT devices communicate with the Endpoint Server. The Endpoint Server provides a browser client on http port 80 consisting of a near real time dashboard to control the IoT device temperature scale (Fahrenheit, Celsius) and display temperature updates from the IoT device.
 
-2.	The **iot** directory has a simulated IoT device that is used to demonstrate the fundamental use of WebSockets and the REST API with the Endpoint Server.
-3.	The **iotpi** directory contains the software that is installed on the Raspberry Pi Zero 2W which tranforms it into an IoT device. The software implements both 1) dynamic registration of the IoT device with the Endpoint Server; and 2) connectivity maintenance in the case of a power or communications failure with the Endpoint Server. You can learn more in the section of this document entitled [Dynamic IoT Registration and Communication Connection Maintenance](#Dynamic-IoT-Registration-and-Communication-Connection-Maintenance).
+2.	The [**iot**](#iot) directory has a simulated IoT device that is used to demonstrate the fundamental use of WebSockets and the REST API with the Endpoint Server.
+3.	The [**iotpi**](#iotpi) directory contains the software that is installed on the Raspberry Pi Zero 2W which tranforms it into an IoT device. The software implements both 1) dynamic registration of the IoT device with the Endpoint Server; and 2) connectivity maintenance in the case of a power or communications failure with the Endpoint Server. You can learn more in the section of this document entitled [Dynamic IoT Registration and Communication Connection Maintenance](#Dynamic-IoT-Registration-and-Communication-Connection-Maintenance).
 
 You can clone the GitHub repository to your local machine using the following command from your terminal: `https://github.com/rickgregg/saasmvp-iot.git`
 
