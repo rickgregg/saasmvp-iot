@@ -342,7 +342,7 @@ Once the Endpoint Server has regained connectivity with the network, the IoT dev
 .
 
 ## Support
-FREE individual support is available for [**registered users**](https://saasmvp.org/reference/framework/support.html) at **support@saasmvp.org**. [**Public support**](https://github.com/rickgregg/saasmvp-iot/issues) is available anytime.
+FREE individual support is available for [**registered users**](https://saasmvp.org/support/support.html) at **support@saasmvp.org**. [**Public support**](https://github.com/rickgregg/saasmvp-iot/issues) is available anytime.
 
 ## License
 [**MIT**](https://github.com/rickgregg/saasmvp-iot/blob/main/LICENSE.txt)
